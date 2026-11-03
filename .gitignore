@@ -1,0 +1,11 @@
+node_modules
+dist
+supabase/secrets.env
+web/.env
+.env
+email-service/.env
+email-service/node_modules/
+local-screener/.venv/
+local-screener/__pycache__/
+Resumes/
+pdfs/
