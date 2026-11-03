@@ -55,30 +55,57 @@ export default function Apply() {
     setBusy(false);
   }
 
-  if (loadingJob) return <div className="center"><div className="card"><p className="muted">Loading job details…</p></div></div>;
-  if (!job) return <div className="center muted">This job is unavailable or closed.</div>;
-  return <div className="center"><form className="card form" onSubmit={submit}>
-    <button type="button" onClick={() => navigate("/candidate")}>← Back to candidate portal</button>
-    <h2>Apply for {job.title}</h2>
-    <p className="muted">{job.company || "Hiring company"}</p>
-    <p className="pre">{job.description}</p>
-    <p className="muted small">Required skills: {job.required_skills.join(", ") || "Not specified"}</p>
-    <label>Name<input required value={name} onChange={(e) => setName(e.target.value)} /></label>
-    <p className="muted small">Your signed-in candidate email will be attached to this application.</p>
-    <label>Resume
-      <input required type="file" accept=".pdf,.docx,.txt" onChange={(e) => {
-        const file = e.target.files?.[0] ?? null;
-        if (file && file.size > MAX_RESUME_BYTES) {
-          setResume(null);
-          setMessage("Resume must be 5 MB or smaller. Please upload a smaller file.");
-        } else {
-          setResume(file);
-          setMessage(null);
-        }
-      }} />
-      <span className="muted small">PDF, DOCX, or TXT · maximum 5 MB</span>
-    </label>
-    {message && <div className={`notice ${message.includes("success") ? "info" : "error"}`}>{message}</div>}
-    <button className="primary" disabled={busy}>{busy ? "Submitting…" : "Submit application"}</button>
-  </form></div>;
+  if (loadingJob) return <div className="candidate-shell"><div className="candidate-main"><div className="empty-state">Loading job details…</div></div></div>;
+  if (!job) return <div className="candidate-shell"><div className="candidate-main"><div className="empty-state">This job is unavailable or closed.</div></div></div>;
+  return <div className="candidate-shell">
+    <header className="candidate-nav">
+      <a className="candidate-brand" href="/candidate"><span className="brand-mark">S</span> SmartHire</a>
+      <nav className="candidate-nav-links">
+        <a className="active" href="/candidate#jobs">Find jobs</a>
+        <a href="/candidate#applications">My applications</a>
+      </nav>
+      <button onClick={() => supabase.auth.signOut()}>Log out</button>
+    </header>
+    <main className="candidate-main">
+      <button className="back-link" type="button" onClick={() => navigate("/candidate")}>← Back to candidate portal</button>
+      <section className="application-hero">
+        <div>
+          <p className="eyebrow">OPEN OPPORTUNITY</p>
+          <h1>{job.title}</h1>
+          <p className="hero-copy">{job.company || "Hiring company"} · Full-time · Remote / on-site</p>
+        </div>
+        <span className="job-type">Accepting applications</span>
+      </section>
+      <div className="application-layout">
+        <section className="application-content">
+          <div className="section-heading"><div><p className="eyebrow">ROLE DETAILS</p><h2>About this role</h2></div></div>
+          <p className="pre">{job.description}</p>
+          <h3>Required skills</h3>
+          <div className="skill-list">{(job.required_skills.length ? job.required_skills : ["Not specified"]).map((skill) => <span className="skill-tag" key={skill}>{skill}</span>)}</div>
+          <div className="application-meta"><span>Minimum experience: {job.min_experience}+ years</span><span>Education: {job.education_level.replace("_", " ")}</span></div>
+        </section>
+        <form className="application-form" onSubmit={submit}>
+          <p className="eyebrow">YOUR APPLICATION</p>
+          <h2>Apply for this role</h2>
+          <p className="muted small">Your signed-in candidate email will be attached to this application.</p>
+          <label>Name<input required value={name} onChange={(e) => setName(e.target.value)} /></label>
+          <label>Resume
+            <input required type="file" accept=".pdf,.docx,.txt" onChange={(e) => {
+              const file = e.target.files?.[0] ?? null;
+              if (file && file.size > MAX_RESUME_BYTES) {
+                setResume(null);
+                setMessage("Resume must be 5 MB or smaller. Please upload a smaller file.");
+              } else {
+                setResume(file);
+                setMessage(null);
+              }
+            }} />
+            <span className="muted small">PDF, DOCX, or TXT · maximum 5 MB</span>
+          </label>
+          {message && <div className={`notice ${message.includes("success") ? "info" : "error"}`}>{message}</div>}
+          <button className="primary" disabled={busy}>{busy ? "Submitting…" : "Submit application"}</button>
+        </form>
+      </div>
+    </main>
+  </div>;
 }
