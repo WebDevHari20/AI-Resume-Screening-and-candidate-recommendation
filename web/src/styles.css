@@ -26,6 +26,9 @@ h4 { margin-top: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 
 .auth-card input { background: #f7f8fc; border-radius: 9px; padding: 11px 12px; }
 .auth-submit { width: 100%; margin-top: 5px; padding: 10px 12px; }
 .auth-switch { text-align: center; color: #3b5bdb; font-size: 13px; text-decoration: none; }
+.auth-role-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; background: #f0f3fa; border-radius: 9px; }
+.auth-role-tabs button { border: 0; background: transparent; color: #63708a; padding: 9px; }
+.auth-role-tabs button.active { background: #fff; color: #3b5bdb; box-shadow: 0 2px 6px rgba(37, 55, 110, .1); }
 @media (max-width: 760px) { .auth-shell { padding: 22px 18px; }.auth-brand { margin-bottom: 35px; }.auth-layout { grid-template-columns: 1fr; gap: 28px; }.auth-intro h1 { font-size: 38px; }.auth-points { margin-top: 20px; }.auth-card { padding: 24px; } }
 .confirm { width: 100%; max-width: 620px; }
 label { display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
