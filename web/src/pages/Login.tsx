@@ -26,6 +26,7 @@ export default function Login() {
     } else if (mode === "login") {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
+        window.alert("Unable to sign in. Please verify your email address and password, then try again.");
         setMsg({ type: "error", text: "Incorrect email or password." });
       } else if (data.session) {
         const { data: profile, error: profileError } = await supabase
@@ -35,6 +36,7 @@ export default function Login() {
           .maybeSingle();
         if (profileError || profile?.role !== "recruiter") {
           await supabase.auth.signOut();
+          window.alert("Access denied. This account is not authorized for recruiter access.");
           setMsg({ type: "error", text: "This account is not a recruiter account." });
         }
       }
