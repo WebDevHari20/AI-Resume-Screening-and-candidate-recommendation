@@ -15,12 +15,15 @@ export default function App() {
   const [ready, setReady] = useState(false);
 
   async function loadSessionRole(nextSession: Session | null) {
-    setSession(nextSession);
     if (!nextSession) {
+      setSession(null);
       setRole(null);
       setReady(true);
       return;
     }
+    setReady(false);
+    setSession(null);
+    setRole(null);
     const { data, error } = await supabase
       .from("profiles")
       .select("role")
@@ -33,6 +36,7 @@ export default function App() {
       setReady(true);
       return;
     }
+    setSession(nextSession);
     setRole(data.role);
     setReady(true);
   }
