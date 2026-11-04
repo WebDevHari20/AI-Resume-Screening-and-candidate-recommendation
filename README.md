@@ -52,7 +52,9 @@ The project uses a hybrid screening architecture:
 Recruiters create an account with email, password, and company name, then sign
 in with email and password. Candidates use the candidate portal, which sends a
 secure email sign-in link. Apply `0007_strict_account_roles.sql` and
-`0010_recruiter_signup.sql` before using this separation in production.
+`0010_recruiter_signup.sql` before using this separation in production. If
+magic-link users remain stuck during sign-in, apply
+`0011_repair_candidate_auth.sql` to restore the auth trigger and profile policy.
 
 ## Repository structure
 
