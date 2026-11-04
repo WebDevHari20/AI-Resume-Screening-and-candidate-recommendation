@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "./lib/supabase";
@@ -13,8 +13,10 @@ export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<"candidate" | "recruiter" | null>(null);
   const [ready, setReady] = useState(false);
+  const loadRequest = useRef(0);
 
   async function loadSessionRole(nextSession: Session | null) {
+    const requestId = ++loadRequest.current;
     if (!nextSession) {
       setSession(null);
       setRole(null);
@@ -29,8 +31,10 @@ export default function App() {
       .select("role")
       .eq("id", nextSession.user.id)
       .maybeSingle();
+    if (requestId !== loadRequest.current) return;
     if (error || !data || (data.role !== "candidate" && data.role !== "recruiter")) {
       await supabase.auth.signOut();
+      if (requestId !== loadRequest.current) return;
       setSession(null);
       setRole(null);
       setReady(true);
