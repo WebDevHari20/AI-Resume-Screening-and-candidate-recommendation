@@ -21,8 +21,19 @@ export default function App() {
       setReady(true);
       return;
     }
-    const { data } = await supabase.from("profiles").select("role").eq("id", nextSession.user.id).maybeSingle();
-    setRole(data?.role === "recruiter" ? "recruiter" : "candidate");
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", nextSession.user.id)
+      .maybeSingle();
+    if (error || !data || (data.role !== "candidate" && data.role !== "recruiter")) {
+      await supabase.auth.signOut();
+      setSession(null);
+      setRole(null);
+      setReady(true);
+      return;
+    }
+    setRole(data.role);
     setReady(true);
   }
 
