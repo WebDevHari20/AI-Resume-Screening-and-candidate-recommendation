@@ -46,11 +46,17 @@ export default function App() {
   }
 
   useEffect(() => {
+    let active = true;
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
-      // Defer database work until the auth callback has finished.
-      setTimeout(() => { void loadSessionRole(s); }, 0);
+      if (active) void loadSessionRole(s);
     });
-    return () => sub.subscription.unsubscribe();
+    supabase.auth.getSession().then(({ data }) => {
+      if (active) void loadSessionRole(data.session);
+    });
+    return () => {
+      active = false;
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   return (
