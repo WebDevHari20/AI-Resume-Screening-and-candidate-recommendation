@@ -48,7 +48,11 @@ export default function App() {
   useEffect(() => {
     let active = true;
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
-      if (active) void loadSessionRole(s);
+      if (active) {
+        setTimeout(() => {
+          if (active) void loadSessionRole(s);
+        }, 0);
+      }
     });
     supabase.auth.getSession().then(({ data }) => {
       if (active) void loadSessionRole(data.session);
