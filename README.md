@@ -29,6 +29,7 @@ The project uses a hybrid screening architecture:
 - Supabase Auth for recruiter and candidate authentication
 - Supabase Postgres for jobs, candidates, applications, interviews, and scoring data
 - Supabase Row Level Security for ownership and access control
+- Database-enforced recruiter and candidate account roles
 - Supabase Storage for uploaded resumes
 - Supabase Edge Functions running on Deno
 - SQL migrations in `supabase/migrations/`
@@ -47,6 +48,18 @@ The project uses a hybrid screening architecture:
 - `email-service/` is a standalone Express/Nodemailer Gmail service.
 - The main Supabase Edge Functions use Resend for shortlist and interview email delivery.
 - The standalone email service is not required for the main application flow.
+
+Recruiter accounts are provisioned with the `recruiter` role by an administrator.
+New self-registered accounts default to `candidate`; changing client metadata
+cannot grant recruiter access. Apply migration `0007_strict_account_roles.sql`
+before using this separation in production. After creating a user in Supabase
+Authentication, an administrator can provision recruiter access in SQL:
+
+```sql
+update public.profiles
+set role = 'recruiter'
+where id = 'AUTH_USER_UUID';
+```
 
 ## Repository structure
 

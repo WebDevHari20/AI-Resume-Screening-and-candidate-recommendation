@@ -25,13 +25,10 @@ export default function Login() {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) setMsg({ type: "error", text: error.message });
     } else {
-      const { data, error } = await supabase.auth.signUp({
-        email, password, options: { data: { company } },
+      setMsg({
+        type: "info",
+        text: "Recruiter accounts are provisioned by an administrator. Please request company access before signing in.",
       });
-      if (error) setMsg({ type: "error", text: error.message });
-      else if (!data.session) {
-        setMsg({ type: "info", text: "Account created. Check your email to confirm, then log in." });
-      }
     }
     setBusy(false);
   }

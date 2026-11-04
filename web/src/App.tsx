@@ -11,14 +11,24 @@ import CandidatePortal from "./pages/CandidatePortal";
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
+  const [role, setRole] = useState<"candidate" | "recruiter" | null>(null);
   const [ready, setReady] = useState(false);
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
+  async function loadSessionRole(nextSession: Session | null) {
+    setSession(nextSession);
+    if (!nextSession) {
+      setRole(null);
       setReady(true);
-    });
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
+      return;
+    }
+    const { data } = await supabase.from("profiles").select("role").eq("id", nextSession.user.id).maybeSingle();
+    setRole(data?.role === "recruiter" ? "recruiter" : "candidate");
+    setReady(true);
+  }
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => loadSessionRole(data.session));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => { void loadSessionRole(s); });
     return () => sub.subscription.unsubscribe();
   }, []);
 
@@ -30,7 +40,7 @@ export default function App() {
       <Route path="/candidate-login" element={<CandidateLogin />} />
       <Route
         path="/candidate"
-        element={!ready ? <div className="center muted">Signing you in…</div> : session ? <CandidatePortal /> : <Navigate to="/candidate-login" replace />}
+        element={!ready ? <div className="center muted">Signing you in…</div> : session && role === "candidate" ? <CandidatePortal /> : session && role === "recruiter" ? <Navigate to="/" replace /> : <Navigate to="/candidate-login" replace />}
       />
       <Route
         path="/login"
@@ -40,7 +50,8 @@ export default function App() {
         path="/*"
         element={
           !ready ? <div className="center muted">Loading…</div>
-          : session ? <Dashboard session={session} />
+          : session && role === "recruiter" ? <Dashboard session={session} />
+          : session && role === "candidate" ? <Navigate to="/candidate" replace />
           : <Navigate to="/login" replace />
         }
       />

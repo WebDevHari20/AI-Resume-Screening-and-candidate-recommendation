@@ -380,6 +380,9 @@ recruiter's interview scheduling workflow.
 ## 10. Security and privacy controls
 
 - Supabase Auth protects recruiter and candidate sessions.
+- Database-enforced account roles separate recruiter access from candidate access.
+- New self-registered accounts default to candidate; recruiter roles require
+  administrator provisioning.
 - Row Level Security limits recruiters to their own profiles, jobs, candidates,
   feedback, confirmations, and resume files.
 - Edge Functions use the service role only for trusted server-side processing.
