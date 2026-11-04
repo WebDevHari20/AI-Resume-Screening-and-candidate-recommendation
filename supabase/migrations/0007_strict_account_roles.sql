@@ -33,10 +33,12 @@ $$;
 
 -- A user's role must not be writable through the client.
 drop policy if exists "own profile" on public.profiles;
+drop policy if exists "read own profile" on public.profiles;
 create policy "read own profile" on public.profiles
   for select using (id = auth.uid());
 
 drop policy if exists "own jobs" on public.jobs;
+drop policy if exists "recruiters manage own jobs" on public.jobs;
 create policy "recruiters manage own jobs" on public.jobs
   for all using (public.is_recruiter() and owner_id = auth.uid())
   with check (public.is_recruiter() and owner_id = auth.uid());
@@ -45,6 +47,9 @@ drop policy if exists "read own candidates" on public.candidates;
 drop policy if exists "update own candidates" on public.candidates;
 drop policy if exists "delete own candidates" on public.candidates;
 drop policy if exists "candidate reads own applications" on public.candidates;
+drop policy if exists "recruiters read own candidates" on public.candidates;
+drop policy if exists "recruiters update own candidates" on public.candidates;
+drop policy if exists "recruiters delete own candidates" on public.candidates;
 
 create policy "recruiters read own candidates" on public.candidates
   for select using (public.is_recruiter() and public.owns_job(job_id));
@@ -56,6 +61,8 @@ create policy "recruiters delete own candidates" on public.candidates
 
 drop policy if exists "own feedback read" on public.feedback;
 drop policy if exists "own feedback insert" on public.feedback;
+drop policy if exists "recruiters read own feedback" on public.feedback;
+drop policy if exists "recruiters insert own feedback" on public.feedback;
 create policy "recruiters read own feedback" on public.feedback
   for select using (public.is_recruiter() and public.owns_candidate(candidate_id));
 create policy "recruiters insert own feedback" on public.feedback
@@ -66,11 +73,14 @@ create policy "recruiters insert own feedback" on public.feedback
   );
 
 drop policy if exists "own confirmations read" on public.interview_confirmations;
+drop policy if exists "recruiters read own confirmations" on public.interview_confirmations;
 create policy "recruiters read own confirmations" on public.interview_confirmations
   for select using (public.is_recruiter() and public.owns_candidate(candidate_id));
 
 drop policy if exists "recruiter reads own resumes" on storage.objects;
 drop policy if exists "recruiter deletes own resumes" on storage.objects;
+drop policy if exists "recruiters read own resumes" on storage.objects;
+drop policy if exists "recruiters delete own resumes" on storage.objects;
 create policy "recruiters read own resumes" on storage.objects
   for select using (
     public.is_recruiter()

@@ -14,22 +14,44 @@ export default function Login() {
     e.preventDefault();
     setBusy(true);
     setMsg(null);
+
     if (role === "candidate") {
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: { emailRedirectTo: `${window.location.origin}/candidate` },
       });
-      if (error) setMsg({ type: "error", text: error.message });
-      else setMsg({ type: "info", text: "Check your email for the secure sign-in link." });
+      setMsg(error
+        ? { type: "error", text: error.message }
+        : { type: "info", text: "Check your email for the secure sign-in link." });
     } else if (mode === "login") {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) setMsg({ type: "error", text: error.message });
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        setMsg({ type: "error", text: "Incorrect email or password." });
+      } else if (data.session) {
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", data.session.user.id)
+          .maybeSingle();
+        if (profileError || profile?.role !== "recruiter") {
+          await supabase.auth.signOut();
+          setMsg({ type: "error", text: "This account is not a recruiter account." });
+        }
+      }
     } else {
-      setMsg({
-        type: "info",
-        text: "Recruiter accounts are provisioned by an administrator. Please request company access before signing in.",
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { company } },
       });
+      if (error) {
+        setMsg({ type: "error", text: error.message });
+      } else {
+        setMsg({ type: "info", text: "Account created. Check your email if confirmation is required, then log in." });
+        setMode("login");
+      }
     }
+
     setBusy(false);
   }
 
@@ -57,8 +79,7 @@ export default function Login() {
 
           <label>Email<input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></label>
           {role === "recruiter" && <label>Password<input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} /></label>}
-          {role === "recruiter" && mode === "register" && <label>Company<input value={company} onChange={(e) => setCompany(e.target.value)} /></label>}
-
+          {role === "recruiter" && mode === "register" && <label>Company<input required value={company} onChange={(e) => setCompany(e.target.value)} /></label>}
           {msg && <div className={`notice ${msg.type}`}>{msg.text}</div>}
 
           <button className="primary auth-submit" disabled={busy}>{busy ? "Please wait…" : role === "candidate" ? "Email me a sign-in link" : mode === "login" ? "Log in" : "Create account"}</button>

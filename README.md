@@ -49,17 +49,10 @@ The project uses a hybrid screening architecture:
 - The main Supabase Edge Functions use Resend for shortlist and interview email delivery.
 - The standalone email service is not required for the main application flow.
 
-Recruiter accounts are provisioned with the `recruiter` role by an administrator.
-New self-registered accounts default to `candidate`; changing client metadata
-cannot grant recruiter access. Apply migration `0007_strict_account_roles.sql`
-before using this separation in production. After creating a user in Supabase
-Authentication, an administrator can provision recruiter access in SQL:
-
-```sql
-update public.profiles
-set role = 'recruiter'
-where id = 'AUTH_USER_UUID';
-```
+Recruiters create an account with email, password, and company name, then sign
+in with email and password. Candidates use the candidate portal, which sends a
+secure email sign-in link. Apply `0007_strict_account_roles.sql` and
+`0010_recruiter_signup.sql` before using this separation in production.
 
 ## Repository structure
 
