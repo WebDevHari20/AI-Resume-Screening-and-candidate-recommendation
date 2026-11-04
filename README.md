@@ -40,11 +40,12 @@ The project uses a hybrid screening architecture:
 - Gemini API for embeddings, scanned-PDF OCR, and recruiter RAG search
 - Deterministic TypeScript NLP and scoring logic
 - GitHub and LeetCode public-profile checks for optional proof of work
+- Automatic shortlisting and candidate notification for scores of 80 or higher
 
 ### Optional services
 
 - `email-service/` is a standalone Express/Nodemailer Gmail service.
-- The main Supabase Edge Functions use Resend for interview email delivery.
+- The main Supabase Edge Functions use Resend for shortlist and interview email delivery.
 - The standalone email service is not required for the main application flow.
 
 ## Repository structure
@@ -71,9 +72,11 @@ When a recruiter uploads a resume:
 7. If both embedding services are unavailable, keyword cosine similarity is used.
 8. Skills, experience, education, proof of work, integrity flags, and semantic
    similarity are combined into a transparent score.
-9. The original resume, parsed data, score breakdown, and explanations are saved
-   in Supabase.
-10. Gemini is used only for deeper contextual tasks such as OCR and recruiter
+9. Candidates scoring 80 or higher are automatically marked as shortlisted and
+    receive a shortlist notification email through Resend.
+10. The original resume, parsed data, score breakdown, and explanations are saved
+    in Supabase.
+11. Gemini is used only for deeper contextual tasks such as OCR and recruiter
     search; it is not the sole scoring authority.
 
 ## Prerequisites
@@ -120,7 +123,8 @@ SBERT_SERVICE_TOKEN=...
 ```
 
 `GITHUB_TOKEN` is optional. `RESEND_API_KEY` and `EMAIL_FROM` are required for
-production interview email delivery. Use a demo WhatsApp number only for testing.
+production shortlist and interview email delivery. Use a demo WhatsApp number
+only for testing.
 
 ## Database setup
 

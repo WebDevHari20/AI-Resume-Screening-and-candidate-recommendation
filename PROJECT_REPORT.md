@@ -28,6 +28,8 @@ does not make an automatic hiring decision.
 - Resume upload for PDF, DOCX, and TXT files.
 - Batch resume processing with file-size and batch-size limits.
 - Candidate ranking by final score.
+- Automatic shortlisting when the final score is 80 or higher.
+- Automatic shortlist notification email to qualifying candidates.
 - Blind screening mode that hides candidate identity in the interface.
 - Candidate filtering by minimum score and status.
 - Explainable score breakdowns and reasons.
@@ -117,7 +119,7 @@ responsive styling.
 
 - Vercel for the frontend.
 - Render, Hugging Face, Cloud Run, or another Python-capable host for SBERT.
-- Resend integration for production interview email delivery.
+- Resend integration for automatic shortlist and interview email delivery.
 - Optional standalone Express/Nodemailer email service.
 
 ## 5. Resume processing pipeline
@@ -369,6 +371,12 @@ Interview links use PostgreSQL functions:
 This design prevents raw confirmation tokens from being stored in the database
 and protects the response workflow against concurrent slot updates.
 
+Candidates with a final score of 80 or higher are automatically saved with
+`shortlisted` status and receive a shortlist notification email through Resend,
+when a candidate email address and email provider configuration are available.
+Interview slots and secure confirmation links are sent later as part of the
+recruiter's interview scheduling workflow.
+
 ## 10. Security and privacy controls
 
 - Supabase Auth protects recruiter and candidate sessions.
@@ -437,4 +445,3 @@ provider or GitHub Actions secret store rather than in source control.
   require human verification.
 - Production readiness requires monitoring, rate limits, backups, audit logging,
   retention policies, and automated end-to-end testing.
-

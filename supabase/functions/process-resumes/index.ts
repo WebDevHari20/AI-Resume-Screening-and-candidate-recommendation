@@ -5,10 +5,51 @@ import { extractSkills } from "../_shared/nlp.ts";
 const MAX_FILES = Number(Deno.env.get("MAX_FILES_PER_REQUEST") ?? 20);
 const MAX_BYTES = Number(Deno.env.get("MAX_FILE_MB") ?? 5) * 1024 * 1024;
 const CONCURRENCY = 3;
+const AUTO_SHORTLIST_SCORE = 80;
 
 const toHex = (buf: ArrayBuffer) =>
   [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
 const safeName = (s: string) => s.replace(/[^A-Za-z0-9._-]/g, "_").slice(0, 80);
+
+async function sendShortlistEmail(
+  candidate: { email: string | null; name: string | null },
+  jobTitle: string,
+) {
+  const apiKey = Deno.env.get("RESEND_API_KEY");
+  const emailFrom = Deno.env.get("EMAIL_FROM");
+  if (!candidate.email) return "Candidate has no email address on file.";
+  if (!apiKey || !emailFrom) return "Email provider is not configured.";
+
+  const name = candidate.name?.trim() || "there";
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: emailFrom,
+        to: candidate.email,
+        subject: `You have been shortlisted for ${jobTitle}`,
+        text: [
+          `Hello ${name},`,
+          "",
+          `Your application for ${jobTitle} has been shortlisted based on the initial screening.`,
+          "The recruiting team will contact you with the next steps.",
+        ].join("\n"),
+      }),
+    });
+    if (response.ok) return null;
+
+    const details = await response.text();
+    console.error("Automatic shortlist email failed:", details);
+    return "Shortlist email could not be sent.";
+  } catch (error) {
+    console.error("Automatic shortlist email request failed:", error);
+    return "Could not reach the email provider.";
+  }
+}
 
 /** POST multipart/form-data: job_id + files (repeat the "files" field). */
 Deno.serve(handler(async (req) => {
@@ -57,22 +98,33 @@ Deno.serve(handler(async (req) => {
       });
       if (up.error) throw new Error(`Storage upload failed: ${up.error.message}`);
 
+      const autoShortlisted = analysis.final_score >= AUTO_SHORTLIST_SCORE;
       const { data: row, error } = await sb.from("candidates").insert({
         job_id: jobId,
         filename: file.name,
         content_hash: hash,
         allocated_phone: demoPhone, // demo number, never the number parsed from the resume
         resume_path: path,
-        status: "new",
+        status: autoShortlisted ? "shortlisted" : "new",
         ...analysis,
-      }).select("id, name, final_score, fit_tier").single();
+      }).select("id, name, email, final_score, fit_tier, status").single();
 
       if (error) {
         await sb.storage.from("resumes").remove([path]);
         if (error.code === "23505") return errors.push({ filename: file.name, code: "duplicate", error: "Duplicate resume" });
         throw new Error(error.message);
       }
-      processed.push({ ...row, filename: file.name });
+      let emailWarning: string | null = null;
+      if (autoShortlisted) {
+        emailWarning = await sendShortlistEmail(row, job.title);
+      }
+      processed.push({
+        ...row,
+        filename: file.name,
+        automatic_shortlist: autoShortlisted,
+        email_sent: autoShortlisted && !emailWarning,
+        email_warning: emailWarning,
+      });
     } catch (e) {
       console.error(file.name, e);
       errors.push({ filename: file.name, code: "processing_failed", error: (e as Error).message });
