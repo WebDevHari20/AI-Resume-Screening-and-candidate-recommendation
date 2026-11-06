@@ -11,9 +11,6 @@ interface Job {
 interface Application {
   id: string;
   job_id: string;
-  status: string;
-  final_score: number | null;
-  fit_tier: string | null;
   created_at: string;
   interview_confirmations?: { status: string; available_slots: { id: string; start_at: string; end_at: string; timezone: string }[]; selected_slot_id: string | null }[];
 }
@@ -81,14 +78,13 @@ export default function CandidatePortal() {
         </article>
       ))}</div> : <div className="empty-state">No matching jobs are available.</div>}
     </section>
-    <section id="applications" className="candidate-section applications-section"><div className="section-heading"><div><p className="eyebrow">YOUR ACTIVITY</p><h2>My applications</h2></div></div>{loading ? <div className="empty-state">Loading applications…</div> : applications.length ? <table><thead><tr><th>Job</th><th>Status</th><th>Score</th><th>Applied</th></tr></thead><tbody>
+    <section id="applications" className="candidate-section applications-section"><div className="section-heading"><div><p className="eyebrow">YOUR ACTIVITY</p><h2>My applications</h2></div></div>{loading ? <div className="empty-state">Loading applications…</div> : applications.length ? <table><thead><tr><th>Job</th><th>Status</th><th>Applied</th></tr></thead><tbody>
       {applications.map((application) => {
         const confirmation = application.interview_confirmations?.[0];
         const slot = confirmation?.available_slots?.find((item) => item.id === confirmation.selected_slot_id);
         return <tr key={application.id}>
           <td>{jobs.find((job) => job.id === application.job_id)?.title ?? "Job"}</td>
-          <td>{application.status}</td>
-          <td>{application.final_score ?? "Pending"}</td>
+          <td>Submitted</td>
           <td>{slot ? `Interview: ${new Date(slot.start_at).toLocaleString("en-IN", { timeZone: slot.timezone })}` : confirmation?.status ?? new Date(application.created_at).toLocaleDateString()}</td>
         </tr>;
       })}

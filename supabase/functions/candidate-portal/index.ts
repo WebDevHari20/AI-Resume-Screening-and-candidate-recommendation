@@ -6,7 +6,7 @@ Deno.serve(handler(async (req) => {
   const [{ data: jobs, error: jobsError }, { data: applications, error: applicationsError }] = await Promise.all([
     sb.from("jobs").select("id, owner_id, title, description, required_skills, min_experience, education_level")
       .eq("applications_open", true).order("created_at", { ascending: false }),
-    sb.from("candidates").select("id, job_id, name, email, status, final_score, fit_tier, created_at, interview_confirmations(status, expires_at, available_slots, selected_slot_id)")
+    sb.from("candidates").select("id, job_id, created_at, interview_confirmations(status, expires_at, available_slots, selected_slot_id)")
       .eq("applicant_id", user.id).order("created_at", { ascending: false }),
   ]);
   if (jobsError || applicationsError) throw new HttpError(500, (jobsError ?? applicationsError)!.message);
